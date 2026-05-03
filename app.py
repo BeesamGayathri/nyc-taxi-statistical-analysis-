@@ -1,3 +1,5 @@
+# app.py (FINAL VERSION - STABLE & PROFESSIONAL)
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -7,55 +9,65 @@ from scipy import stats
 st.set_page_config(page_title="NYC Taxi Pro Dashboard", layout="wide")
 
 # -----------------------------
-# STYLE (🔥 PREMIUM LOOK)
-# -----------------------------
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-    color: white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------
 # TITLE
 # -----------------------------
 st.title("🚖 NYC Taxi Pro Dashboard")
-st.markdown("### Data-Driven Insights for Pricing & Demand Optimization")
+st.markdown("### Advanced Statistical Insights for Pricing & Demand Optimization")
 
 # -----------------------------
-# LOAD DATA
+# LOAD DATA (SAFE + FAST)
 # -----------------------------
 @st.cache_data
 def load_data():
-    df = pd.read_csv("yellow_tripdata_2020-06.csv")
+    try:
+        df = pd.read_csv("yellow_tripdata_2020-06.csv")
 
-    df = df[(df['trip_distance'] > 0) & (df['fare_amount'] > 0)]
+        # Basic Cleaning
+        df = df[(df['trip_distance'] > 0) & (df['fare_amount'] > 0)]
 
-    df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
-    df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+        # Datetime conversion
+        df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'], errors='coerce')
+        df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'], errors='coerce')
 
-    df['trip_duration'] = (df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']).dt.total_seconds()/60
-    df['trip_speed'] = df['trip_distance'] / (df['trip_duration']/60)
-    df['fare_per_km'] = df['fare_amount'] / df['trip_distance']
-    df['tip_percentage'] = (df['tip_amount']/df['fare_amount'])*100
-    df['hour'] = df['tpep_pickup_datetime'].dt.hour
+        # Drop invalid datetime rows
+        df = df.dropna(subset=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
 
-    return df.sample(50000)  # ⚡ speed optimization
+        # Feature Engineering
+        df['trip_duration'] = (df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']).dt.total_seconds()/60
+
+        # Avoid division errors
+        df = df[df['trip_duration'] > 0]
+
+        df['trip_speed'] = df['trip_distance'] / (df['trip_duration']/60)
+        df['fare_per_km'] = df['fare_amount'] / df['trip_distance']
+        df['tip_percentage'] = (df['tip_amount']/df['fare_amount'])*100
+        df['hour'] = df['tpep_pickup_datetime'].dt.hour
+
+        # SAFE SAMPLING (🔥 FIXED)
+        df = df.sample(min(50000, len(df)), random_state=42)
+
+        return df
+
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        return pd.DataFrame()
 
 df = load_data()
 
+# Stop app if data not loaded
+if df.empty:
+    st.stop()
+
 # -----------------------------
-# SIDEBAR
+# SIDEBAR FILTER
 # -----------------------------
 st.sidebar.header("🔎 Filters")
 
-hour = st.sidebar.slider("Select Hour Range", 0, 23, (0, 23))
-filtered_df = df[(df['hour'] >= hour[0]) & (df['hour'] <= hour[1])]
+hour_range = st.sidebar.slider("Select Hour Range", 0, 23, (0, 23))
+filtered_df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
 
 # -----------------------------
-# KPIs
+# KPI METRICS
 # -----------------------------
 st.subheader("📊 Key Metrics")
 
@@ -72,82 +84,96 @@ c4.metric("💡 Avg Tip %", f"{filtered_df['tip_percentage'].mean():.2f}")
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Analysis", "📈 Trends", "🗺️ Map", "🧠 Insights"])
 
 # -----------------------------
-# ANALYSIS
+# TAB 1: ANALYSIS
 # -----------------------------
 with tab1:
-    fig = px.scatter(filtered_df,
-                     x="trip_distance",
-                     y="fare_amount",
-                     color="trip_duration",
-                     title="Distance vs Fare")
+    st.subheader("Distance vs Fare")
 
+    fig = px.scatter(
+        filtered_df,
+        x="trip_distance",
+        y="fare_amount",
+        color="trip_duration",
+        title="Distance vs Fare Relationship"
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
-# TRENDS
+# TAB 2: TRENDS
 # -----------------------------
 with tab2:
+    st.subheader("Demand Trends")
+
     demand = filtered_df['hour'].value_counts().sort_index()
 
-    fig = px.line(x=demand.index, y=demand.values,
-                  labels={'x':'Hour','y':'Trips'},
-                  title="Trips by Hour")
-
+    fig = px.line(
+        x=demand.index,
+        y=demand.values,
+        labels={'x': 'Hour', 'y': 'Trips'},
+        title="Trips by Hour"
+    )
     st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Speed Trends")
 
     speed = filtered_df.groupby('hour')['trip_speed'].mean()
 
-    fig2 = px.line(x=speed.index, y=speed.values,
-                   title="Average Speed by Hour")
-
+    fig2 = px.line(
+        x=speed.index,
+        y=speed.values,
+        title="Average Speed by Hour"
+    )
     st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# MAP (🔥 WOW FEATURE)
+# TAB 3: MAP (SAFE)
 # -----------------------------
 with tab3:
-    st.subheader("NYC Trip Locations")
+    st.subheader("Trip Locations")
 
-    if 'pickup_longitude' in filtered_df.columns:
-        map_df = filtered_df[['pickup_latitude','pickup_longitude']].dropna().sample(2000)
+    if 'pickup_latitude' in df.columns and 'pickup_longitude' in df.columns:
+        map_df = df[['pickup_latitude', 'pickup_longitude']].dropna()
 
-        st.map(map_df.rename(columns={
-            'pickup_latitude':'lat',
-            'pickup_longitude':'lon'
-        }))
+        if len(map_df) > 0:
+            map_df = map_df.sample(min(2000, len(map_df)), random_state=42)
+
+            st.map(map_df.rename(columns={
+                'pickup_latitude': 'lat',
+                'pickup_longitude': 'lon'
+            }))
+        else:
+            st.warning("No valid location data available")
     else:
-        st.warning("Map data not available in dataset")
+        st.warning("Map columns not found in dataset")
 
 # -----------------------------
-# INSIGHTS + AI STYLE
+# TAB 4: INSIGHTS
 # -----------------------------
 with tab4:
-    st.subheader("🔗 Correlation")
+    st.subheader("Correlation Analysis")
 
-    corr = filtered_df[['trip_distance','fare_amount','trip_duration']].corr()
+    corr = filtered_df[['trip_distance', 'fare_amount', 'trip_duration']].corr()
     st.dataframe(corr)
 
-    st.subheader("🧪 Hypothesis Testing")
+    st.subheader("Hypothesis Testing")
 
-    peak = df[(df['hour']>=7)&(df['hour']<=10)]['fare_amount']
-    non_peak = df[(df['hour']<7)|(df['hour']>10)]['fare_amount']
+    peak = df[(df['hour'] >= 7) & (df['hour'] <= 10)]['fare_amount']
+    non_peak = df[(df['hour'] < 7) | (df['hour'] > 10)]['fare_amount']
 
     t_stat, p_val = stats.ttest_ind(peak, non_peak)
 
     st.write(f"P-value: {p_val:.5f}")
 
     if p_val < 0.05:
-        st.success("Peak pricing exists (Significant)")
+        st.success("Significant difference → Peak pricing exists")
     else:
-        st.warning("No strong difference")
+        st.warning("No significant difference")
 
-    # 🤖 AUTO INSIGHTS
-    st.subheader("🤖 Smart Insights")
+    # SMART INSIGHTS
+    st.subheader("Smart Insights")
 
-    avg_speed = filtered_df['trip_speed'].mean()
-
-    if avg_speed < 20:
-        st.info("🚦 Traffic congestion is high during selected hours")
+    if filtered_df['trip_speed'].mean() < 20:
+        st.info("🚦 Traffic congestion is high")
     else:
         st.success("🚀 Traffic flow is smooth")
 
@@ -157,15 +183,15 @@ with tab4:
 # -----------------------------
 # DOWNLOAD BUTTON
 # -----------------------------
-st.subheader("📥 Download Data")
+st.subheader("📥 Download Filtered Data")
 
 csv = filtered_df.to_csv(index=False).encode('utf-8')
 
 st.download_button(
-    label="Download Filtered Data",
+    label="Download CSV",
     data=csv,
-    file_name='taxi_data.csv',
-    mime='text/csv'
+    file_name="taxi_data.csv",
+    mime="text/csv"
 )
 
 # -----------------------------
