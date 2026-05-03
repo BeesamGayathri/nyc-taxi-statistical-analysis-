@@ -1,19 +1,32 @@
-# app.py
+# app.py (UPGRADED UI)
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 from scipy import stats
 
-st.set_page_config(page_title="NYC Taxi Analysis", layout="wide")
+st.set_page_config(page_title="NYC Taxi Dashboard", layout="wide")
+
+# -----------------------------
+# CUSTOM STYLE (🔥 UI BOOST)
+# -----------------------------
+st.markdown("""
+<style>
+.metric-box {
+    background-color: #111;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # -----------------------------
 # TITLE
 # -----------------------------
-st.title("🚖 NYC Taxi Trip Analysis Dashboard")
-st.markdown("### Advanced Statistical Analysis for Pricing & Demand Insights")
+st.title("🚖 NYC Taxi Analytics Dashboard")
+st.markdown("### Advanced Statistical Insights for Business Optimization")
 
 # -----------------------------
 # LOAD DATA
@@ -22,33 +35,28 @@ st.markdown("### Advanced Statistical Analysis for Pricing & Demand Insights")
 def load_data():
     df = pd.read_csv("yellow_tripdata_2020-06.csv")
 
-    # Basic Cleaning
-    df = df[df['trip_distance'] > 0]
-    df = df[df['fare_amount'] > 0]
+    df = df[(df['trip_distance'] > 0) & (df['fare_amount'] > 0)]
 
     df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
     df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
 
-    # Feature Engineering
     df['trip_duration'] = (df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']).dt.total_seconds()/60
     df['trip_speed'] = df['trip_distance'] / (df['trip_duration']/60)
     df['fare_per_km'] = df['fare_amount'] / df['trip_distance']
     df['tip_percentage'] = (df['tip_amount']/df['fare_amount'])*100
     df['hour'] = df['tpep_pickup_datetime'].dt.hour
-    df['day_type'] = df['tpep_pickup_datetime'].dt.dayofweek.apply(lambda x: 'Weekend' if x>=5 else 'Weekday')
-    df['peak'] = df['hour'].apply(lambda x: 'Peak' if 7<=x<=10 or 17<=x<=20 else 'Non-Peak')
 
     return df
 
 df = load_data()
 
 # -----------------------------
-# SIDEBAR FILTERS
+# SIDEBAR
 # -----------------------------
 st.sidebar.header("🔎 Filters")
 
-hour = st.sidebar.slider("Select Hour", 0, 23, (0, 23))
-filtered_df = df[(df['hour'] >= hour[0]) & (df['hour'] <= hour[1])]
+hour_range = st.sidebar.slider("Select Hour Range", 0, 23, (0, 23))
+filtered_df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
 
 # -----------------------------
 # KPI METRICS
@@ -57,93 +65,89 @@ st.subheader("📊 Key Metrics")
 
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Avg Fare", round(filtered_df['fare_amount'].mean(), 2))
-col2.metric("Avg Distance", round(filtered_df['trip_distance'].mean(), 2))
-col3.metric("Avg Duration", round(filtered_df['trip_duration'].mean(), 2))
-col4.metric("Avg Tip %", round(filtered_df['tip_percentage'].mean(), 2))
+col1.metric("💰 Avg Fare", f"{filtered_df['fare_amount'].mean():.2f}")
+col2.metric("📏 Avg Distance", f"{filtered_df['trip_distance'].mean():.2f}")
+col3.metric("⏱ Avg Duration", f"{filtered_df['trip_duration'].mean():.2f}")
+col4.metric("💡 Avg Tip %", f"{filtered_df['tip_percentage'].mean():.2f}")
 
 # -----------------------------
-# DISTRIBUTIONS
+# TABS (🔥 PROFESSIONAL LOOK)
 # -----------------------------
-st.subheader("📈 Distributions")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    fig, ax = plt.subplots()
-    sns.histplot(filtered_df['fare_amount'], bins=50, ax=ax)
-    ax.set_title("Fare Distribution")
-    st.pyplot(fig)
-
-with col2:
-    fig, ax = plt.subplots()
-    sns.histplot(filtered_df['trip_distance'], bins=50, ax=ax)
-    ax.set_title("Distance Distribution")
-    st.pyplot(fig)
+tab1, tab2, tab3 = st.tabs(["📊 Analysis", "📈 Trends", "🧠 Insights"])
 
 # -----------------------------
-# DEMAND ANALYSIS
+# TAB 1: ANALYSIS
 # -----------------------------
-st.subheader("📊 Demand by Hour")
+with tab1:
+    st.subheader("Fare vs Distance")
 
-fig, ax = plt.subplots()
-filtered_df['hour'].value_counts().sort_index().plot(ax=ax)
-ax.set_title("Trips per Hour")
-st.pyplot(fig)
+    fig = px.scatter(filtered_df.sample(5000),
+                     x="trip_distance",
+                     y="fare_amount",
+                     color="trip_duration",
+                     title="Distance vs Fare")
 
-# -----------------------------
-# SPEED ANALYSIS
-# -----------------------------
-st.subheader("🚦 Speed Analysis")
-
-fig, ax = plt.subplots()
-filtered_df.groupby('hour')['trip_speed'].mean().plot(ax=ax)
-ax.set_title("Average Speed by Hour")
-st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
-# CORRELATION
+# TAB 2: TRENDS
 # -----------------------------
-st.subheader("🔗 Correlation Insights")
+with tab2:
+    st.subheader("Demand by Hour")
 
-corr = filtered_df[['trip_distance','fare_amount','trip_duration']].corr()
+    demand = filtered_df['hour'].value_counts().sort_index()
 
-fig, ax = plt.subplots()
-sns.heatmap(corr, annot=True, ax=ax)
-st.pyplot(fig)
+    fig = px.line(x=demand.index, y=demand.values,
+                  labels={'x':'Hour','y':'Trips'},
+                  title="Trips by Hour")
 
-# -----------------------------
-# HYPOTHESIS TESTING
-# -----------------------------
-st.subheader("🧪 Hypothesis Testing")
+    st.plotly_chart(fig, use_container_width=True)
 
-peak = df[df['peak']=='Peak']['fare_amount']
-non_peak = df[df['peak']=='Non-Peak']['fare_amount']
+    st.subheader("Speed Trends")
 
-t_stat, p_val = stats.ttest_ind(peak, non_peak)
+    speed = filtered_df.groupby('hour')['trip_speed'].mean()
 
-st.write("### Peak vs Non-Peak Fare")
-st.write(f"P-value: {p_val}")
+    fig2 = px.line(x=speed.index, y=speed.values,
+                   title="Average Speed by Hour")
 
-if p_val < 0.05:
-    st.success("Significant difference in fare (Peak Pricing Exists)")
-else:
-    st.warning("No significant difference")
+    st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# BUSINESS INSIGHTS
+# TAB 3: INSIGHTS
 # -----------------------------
-st.subheader("💡 Business Insights")
+with tab3:
+    st.subheader("Statistical Insights")
 
-st.markdown("""
-- 🚖 High duration + low distance trips indicate inefficiency  
-- 💰 Fare per km variation suggests pricing inconsistency  
-- 📊 Peak hours show high demand and lower speeds  
-- 🎯 Few high-value trips drive majority revenue  
-""")
+    # Correlation
+    corr = filtered_df[['trip_distance','fare_amount','trip_duration']].corr()
+
+    st.write("### Correlation Matrix")
+    st.dataframe(corr)
+
+    # Hypothesis Test
+    peak = df[(df['hour']>=7)&(df['hour']<=10)]['fare_amount']
+    non_peak = df[(df['hour']<7)|(df['hour']>10)]['fare_amount']
+
+    t_stat, p_val = stats.ttest_ind(peak, non_peak)
+
+    st.write("### Peak vs Non-Peak Pricing")
+    st.write(f"P-value: {p_val:.5f}")
+
+    if p_val < 0.05:
+        st.success("Significant difference → Peak pricing exists")
+    else:
+        st.warning("No significant difference")
+
+    st.markdown("""
+    ### 💡 Key Insights
+    - 🚖 Inefficient trips exist (high duration, low distance)
+    - 💰 Pricing varies across trips → inconsistency
+    - 📊 Peak hours show high demand and congestion
+    - 🎯 Few trips generate most revenue
+    """)
 
 # -----------------------------
 # FOOTER
 # -----------------------------
 st.markdown("---")
-st.markdown("Made by Beesam Gayathri 🚀")
+st.markdown("✨ Developed by Beesam Gayathri")
