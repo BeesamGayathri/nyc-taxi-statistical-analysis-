@@ -1,23 +1,19 @@
-# app.py (UPGRADED UI)
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
 from scipy import stats
 
-st.set_page_config(page_title="NYC Taxi Dashboard", layout="wide")
+st.set_page_config(page_title="NYC Taxi Pro Dashboard", layout="wide")
 
 # -----------------------------
-# CUSTOM STYLE (🔥 UI BOOST)
+# STYLE (🔥 PREMIUM LOOK)
 # -----------------------------
 st.markdown("""
 <style>
-.metric-box {
-    background-color: #111;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
+body {
+    background-color: #0e1117;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -25,8 +21,8 @@ st.markdown("""
 # -----------------------------
 # TITLE
 # -----------------------------
-st.title("🚖 NYC Taxi Analytics Dashboard")
-st.markdown("### Advanced Statistical Insights for Business Optimization")
+st.title("🚖 NYC Taxi Pro Dashboard")
+st.markdown("### Data-Driven Insights for Pricing & Demand Optimization")
 
 # -----------------------------
 # LOAD DATA
@@ -46,7 +42,7 @@ def load_data():
     df['tip_percentage'] = (df['tip_amount']/df['fare_amount'])*100
     df['hour'] = df['tpep_pickup_datetime'].dt.hour
 
-    return df
+    return df.sample(50000)  # ⚡ speed optimization
 
 df = load_data()
 
@@ -55,33 +51,31 @@ df = load_data()
 # -----------------------------
 st.sidebar.header("🔎 Filters")
 
-hour_range = st.sidebar.slider("Select Hour Range", 0, 23, (0, 23))
-filtered_df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
+hour = st.sidebar.slider("Select Hour Range", 0, 23, (0, 23))
+filtered_df = df[(df['hour'] >= hour[0]) & (df['hour'] <= hour[1])]
 
 # -----------------------------
-# KPI METRICS
+# KPIs
 # -----------------------------
 st.subheader("📊 Key Metrics")
 
-col1, col2, col3, col4 = st.columns(4)
+c1, c2, c3, c4 = st.columns(4)
 
-col1.metric("💰 Avg Fare", f"{filtered_df['fare_amount'].mean():.2f}")
-col2.metric("📏 Avg Distance", f"{filtered_df['trip_distance'].mean():.2f}")
-col3.metric("⏱ Avg Duration", f"{filtered_df['trip_duration'].mean():.2f}")
-col4.metric("💡 Avg Tip %", f"{filtered_df['tip_percentage'].mean():.2f}")
-
-# -----------------------------
-# TABS (🔥 PROFESSIONAL LOOK)
-# -----------------------------
-tab1, tab2, tab3 = st.tabs(["📊 Analysis", "📈 Trends", "🧠 Insights"])
+c1.metric("💰 Avg Fare", f"{filtered_df['fare_amount'].mean():.2f}")
+c2.metric("📏 Avg Distance", f"{filtered_df['trip_distance'].mean():.2f}")
+c3.metric("⏱ Avg Duration", f"{filtered_df['trip_duration'].mean():.2f}")
+c4.metric("💡 Avg Tip %", f"{filtered_df['tip_percentage'].mean():.2f}")
 
 # -----------------------------
-# TAB 1: ANALYSIS
+# TABS
+# -----------------------------
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Analysis", "📈 Trends", "🗺️ Map", "🧠 Insights"])
+
+# -----------------------------
+# ANALYSIS
 # -----------------------------
 with tab1:
-    st.subheader("Fare vs Distance")
-
-    fig = px.scatter(filtered_df.sample(5000),
+    fig = px.scatter(filtered_df,
                      x="trip_distance",
                      y="fare_amount",
                      color="trip_duration",
@@ -90,11 +84,9 @@ with tab1:
     st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
-# TAB 2: TRENDS
+# TRENDS
 # -----------------------------
 with tab2:
-    st.subheader("Demand by Hour")
-
     demand = filtered_df['hour'].value_counts().sort_index()
 
     fig = px.line(x=demand.index, y=demand.values,
@@ -102,8 +94,6 @@ with tab2:
                   title="Trips by Hour")
 
     st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Speed Trends")
 
     speed = filtered_df.groupby('hour')['trip_speed'].mean()
 
@@ -113,41 +103,73 @@ with tab2:
     st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# TAB 3: INSIGHTS
+# MAP (🔥 WOW FEATURE)
 # -----------------------------
 with tab3:
-    st.subheader("Statistical Insights")
+    st.subheader("NYC Trip Locations")
 
-    # Correlation
+    if 'pickup_longitude' in filtered_df.columns:
+        map_df = filtered_df[['pickup_latitude','pickup_longitude']].dropna().sample(2000)
+
+        st.map(map_df.rename(columns={
+            'pickup_latitude':'lat',
+            'pickup_longitude':'lon'
+        }))
+    else:
+        st.warning("Map data not available in dataset")
+
+# -----------------------------
+# INSIGHTS + AI STYLE
+# -----------------------------
+with tab4:
+    st.subheader("🔗 Correlation")
+
     corr = filtered_df[['trip_distance','fare_amount','trip_duration']].corr()
-
-    st.write("### Correlation Matrix")
     st.dataframe(corr)
 
-    # Hypothesis Test
+    st.subheader("🧪 Hypothesis Testing")
+
     peak = df[(df['hour']>=7)&(df['hour']<=10)]['fare_amount']
     non_peak = df[(df['hour']<7)|(df['hour']>10)]['fare_amount']
 
     t_stat, p_val = stats.ttest_ind(peak, non_peak)
 
-    st.write("### Peak vs Non-Peak Pricing")
     st.write(f"P-value: {p_val:.5f}")
 
     if p_val < 0.05:
-        st.success("Significant difference → Peak pricing exists")
+        st.success("Peak pricing exists (Significant)")
     else:
-        st.warning("No significant difference")
+        st.warning("No strong difference")
 
-    st.markdown("""
-    ### 💡 Key Insights
-    - 🚖 Inefficient trips exist (high duration, low distance)
-    - 💰 Pricing varies across trips → inconsistency
-    - 📊 Peak hours show high demand and congestion
-    - 🎯 Few trips generate most revenue
-    """)
+    # 🤖 AUTO INSIGHTS
+    st.subheader("🤖 Smart Insights")
+
+    avg_speed = filtered_df['trip_speed'].mean()
+
+    if avg_speed < 20:
+        st.info("🚦 Traffic congestion is high during selected hours")
+    else:
+        st.success("🚀 Traffic flow is smooth")
+
+    if filtered_df['fare_per_km'].std() > 2:
+        st.warning("💰 Pricing inconsistency detected")
+
+# -----------------------------
+# DOWNLOAD BUTTON
+# -----------------------------
+st.subheader("📥 Download Data")
+
+csv = filtered_df.to_csv(index=False).encode('utf-8')
+
+st.download_button(
+    label="Download Filtered Data",
+    data=csv,
+    file_name='taxi_data.csv',
+    mime='text/csv'
+)
 
 # -----------------------------
 # FOOTER
 # -----------------------------
 st.markdown("---")
-st.markdown("✨ Developed by Beesam Gayathri")
+st.markdown("✨ Built by Beesam Gayathri | Advanced Statistical Project")
