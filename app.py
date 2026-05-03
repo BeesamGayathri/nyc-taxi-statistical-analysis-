@@ -1,4 +1,4 @@
-# app.py (FINAL VERSION - STABLE & PROFESSIONAL)
+# app.py (FINAL VERSION - NO ERRORS + CLEAN DASHBOARD)
 
 import streamlit as st
 import pandas as pd
@@ -15,7 +15,7 @@ st.title("🚖 NYC Taxi Pro Dashboard")
 st.markdown("### Advanced Statistical Insights for Pricing & Demand Optimization")
 
 # -----------------------------
-# LOAD DATA (SAFE + FAST)
+# LOAD DATA
 # -----------------------------
 @st.cache_data
 def load_data():
@@ -29,21 +29,21 @@ def load_data():
         df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'], errors='coerce')
         df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'], errors='coerce')
 
-        # Drop invalid datetime rows
         df = df.dropna(subset=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
 
         # Feature Engineering
-        df['trip_duration'] = (df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']).dt.total_seconds()/60
+        df['trip_duration'] = (
+            df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']
+        ).dt.total_seconds() / 60
 
-        # Avoid division errors
         df = df[df['trip_duration'] > 0]
 
-        df['trip_speed'] = df['trip_distance'] / (df['trip_duration']/60)
+        df['trip_speed'] = df['trip_distance'] / (df['trip_duration'] / 60)
         df['fare_per_km'] = df['fare_amount'] / df['trip_distance']
-        df['tip_percentage'] = (df['tip_amount']/df['fare_amount'])*100
+        df['tip_percentage'] = (df['tip_amount'] / df['fare_amount']) * 100
         df['hour'] = df['tpep_pickup_datetime'].dt.hour
 
-        # SAFE SAMPLING (🔥 FIXED)
+        # Safe Sampling
         df = df.sample(min(50000, len(df)), random_state=42)
 
         return df
@@ -54,7 +54,6 @@ def load_data():
 
 df = load_data()
 
-# Stop app if data not loaded
 if df.empty:
     st.stop()
 
@@ -67,7 +66,7 @@ hour_range = st.sidebar.slider("Select Hour Range", 0, 23, (0, 23))
 filtered_df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
 
 # -----------------------------
-# KPI METRICS
+# KPIs
 # -----------------------------
 st.subheader("📊 Key Metrics")
 
@@ -81,7 +80,7 @@ c4.metric("💡 Avg Tip %", f"{filtered_df['tip_percentage'].mean():.2f}")
 # -----------------------------
 # TABS
 # -----------------------------
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Analysis", "📈 Trends", "🗺️ Map", "🧠 Insights"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Analysis", "📈 Trends", "📍 Zones", "🧠 Insights"])
 
 # -----------------------------
 # TAB 1: ANALYSIS
@@ -126,25 +125,23 @@ with tab2:
     st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# TAB 3: MAP (SAFE)
+# TAB 3: ZONE ANALYSIS (FIXED MAP)
 # -----------------------------
 with tab3:
-    st.subheader("Trip Locations")
+    st.subheader("Top Pickup Zones")
 
-    if 'pickup_latitude' in df.columns and 'pickup_longitude' in df.columns:
-        map_df = df[['pickup_latitude', 'pickup_longitude']].dropna()
+    if 'PULocationID' in df.columns:
+        zone_counts = df['PULocationID'].value_counts().head(20)
 
-        if len(map_df) > 0:
-            map_df = map_df.sample(min(2000, len(map_df)), random_state=42)
-
-            st.map(map_df.rename(columns={
-                'pickup_latitude': 'lat',
-                'pickup_longitude': 'lon'
-            }))
-        else:
-            st.warning("No valid location data available")
+        fig = px.bar(
+            x=zone_counts.index,
+            y=zone_counts.values,
+            labels={'x': 'Zone ID', 'y': 'Trips'},
+            title="Top 20 Pickup Zones"
+        )
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("Map columns not found in dataset")
+        st.warning("Zone data not available")
 
 # -----------------------------
 # TAB 4: INSIGHTS
@@ -169,7 +166,6 @@ with tab4:
     else:
         st.warning("No significant difference")
 
-    # SMART INSIGHTS
     st.subheader("Smart Insights")
 
     if filtered_df['trip_speed'].mean() < 20:
@@ -181,7 +177,7 @@ with tab4:
         st.warning("💰 Pricing inconsistency detected")
 
 # -----------------------------
-# DOWNLOAD BUTTON
+# DOWNLOAD
 # -----------------------------
 st.subheader("📥 Download Filtered Data")
 
