@@ -140,7 +140,7 @@ This project demonstrates how **advanced statistics + visualization** can improv
 ## 👩‍💻 Author
 
 **Beesam Gayathri**
-CSM A Section | Roll No: 6614
+
 
 ---
 
