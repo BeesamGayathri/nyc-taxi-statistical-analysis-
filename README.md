@@ -1,104 +1,147 @@
-# 🚖 Advanced Statistical Analysis of NYC Taxi Trip Data
+# 🚖 NYC Taxi Statistical Analysis Dashboard
+
+<p align="center">
+  <b>Advanced Data Analysis • Statistical Validation • Business Insights</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10-blue?logo=python"/>
+  <img src="https://img.shields.io/badge/Streamlit-App-red?logo=streamlit"/>
+  <img src="https://img.shields.io/badge/Status-Live-success"/>
+  <img src="https://img.shields.io/badge/Domain-Data%20Analytics-yellow"/>
+</p>
+
+---
+
+## 🌐 Live Dashboard
+
+👉 https://nyc-taxi-statistical-analysis.streamlit.app
+
+---
 
 ## 📌 Project Overview
-This project focuses on analyzing NYC taxi trip data using **advanced statistical techniques** to uncover meaningful insights related to trip behavior, pricing patterns, and operational efficiency.
 
-The analysis simulates a real-world business scenario where data-driven insights are used to improve decision-making in a ride-hailing environment.
+This project performs an **advanced statistical analysis** on NYC taxi trip data to uncover actionable insights related to trip behavior, pricing patterns, demand trends, and operational efficiency.
 
----
-
-## 🧠 Objective
-The primary objective of this project is to:
-
-- Understand trip behavior and travel patterns  
-- Analyze pricing structure and consistency  
-- Identify demand trends across different time periods  
-- Detect operational inefficiencies  
-- Validate assumptions using statistical methods  
+The focus is not just on analysis—but on **statistical validation and business decision-making**.
 
 ---
 
-## 📊 Key Analysis Areas
+## 🎯 Objectives
 
-### 🚖 Trip Behavior
-- Analysis of trip distance, duration, and passenger count  
-- Understanding how customers use taxi services  
-
-### 💰 Pricing Patterns
-- Fare distribution and variability  
-- Fare per kilometer consistency  
-
-### 📊 Demand Trends
-- Peak vs non-peak hour analysis  
-- Hourly demand distribution  
-
-### ⚙️ Operational Efficiency
-- Identification of inefficient trips  
-- Detection of delays and anomalies  
-
-### 📈 Statistical Analysis
-- Hypothesis Testing (t-test, ANOVA)  
-- Correlation Analysis  
-- Variability and distribution analysis  
+* Understand customer usage patterns
+* Analyze pricing consistency and fare distribution
+* Identify peak demand periods
+* Detect inefficient trips
+* Validate assumptions using statistical methods
 
 ---
 
-## 🛠️ Tools & Technologies Used
+## ⚙️ Feature Engineering
 
-- Python  
-- Pandas  
-- NumPy  
-- Matplotlib  
-- Seaborn  
-- SciPy  
-- Google Colab  
+Derived key variables for deeper analysis:
+
+* ⏱ Trip Duration
+* 🚀 Trip Speed
+* 💰 Fare per KM
+* 💡 Tip Percentage
+* 🕒 Hour-based segmentation
+
+---
+
+## 📊 Key Insights
+
+* Fare distribution is **right-skewed** (few trips generate high revenue)
+* Strong **positive correlation** between distance and fare
+* Peak hours show **traffic congestion (low speed)**
+* Pricing inconsistency observed across trips
+* Tipping behavior is **weakly correlated** with fare
+
+---
+
+## 🧪 Statistical Analysis
+
+* Hypothesis Testing (t-test, ANOVA)
+* Correlation Analysis
+* Group Comparisons
+* Variability Analysis
+
+> All insights are **statistically validated**, not just visually observed.
+
+---
+
+## 💡 Business Recommendations
+
+* Standardize pricing using fare-per-km
+* Optimize driver allocation during peak hours
+* Improve route efficiency
+* Introduce tipping incentives
+* Build data-driven pricing models
+
+---
+
+## 🚀 Dashboard Features
+
+* 📊 Interactive visualizations (Plotly)
+* 🔎 Real-time filtering
+* 📍 Zone-based demand analysis
+* 🧠 Automated insights
+* 📥 Downloadable dataset
+
+---
+
+## 🛠️ Tech Stack
+
+| Category      | Tools         |
+| ------------- | ------------- |
+| Language      | Python        |
+| Data Analysis | Pandas, NumPy |
+| Visualization | Plotly        |
+| Statistics    | SciPy         |
+| Deployment    | Streamlit     |
 
 ---
 
 ## 📂 Project Structure
+
 nyc-taxi-statistical-analysis/
 │
+├── app.py
+├── requirements.txt
 ├── notebooks/
-│ └── NYC_Taxi_Statistical_Analysis.ipynb
-│
-├── data/ (optional)
-├── visuals/ (optional)
+│   └── NYC_Taxi_Statistical_Analysis.ipynb
+├── data/
 ├── README.md
 
 ---
 
-## 📌 Key Insights
+## ▶️ Run Locally
 
-- Fare distribution is right-skewed, indicating few high-value trips drive revenue  
-- Strong positive correlation between trip distance and fare amount  
-- Peak hours show reduced speed due to traffic congestion  
-- Significant difference observed between peak and non-peak pricing  
-- Tipping behavior is inconsistent and weakly correlated with fare  
+pip install -r requirements.txt
+streamlit run app.py
 
 ---
 
-## 🚀 Business Recommendations
+## 🧠 Key Learnings
 
-- Optimize pricing strategy for consistency  
-- Improve driver allocation during peak hours  
-- Enhance route optimization to reduce inefficiencies  
-- Introduce incentives to improve tipping behavior  
-- Develop a data-driven pricing model  
+* Applied statistical thinking to real-world data
+* Converted raw data into business insights
+* Built interactive dashboards for decision-making
+* Understood data-driven optimization strategies
 
 ---
 
 ## 🎯 Conclusion
 
-This project demonstrates how **advanced statistical analysis** can transform raw transportation data into actionable insights.
-
-The findings help improve pricing strategies, operational efficiency, and overall customer experience in a ride-hailing system.
+This project demonstrates how **advanced statistics + visualization** can improve pricing strategies, operational efficiency, and customer experience in ride-hailing systems.
 
 ---
 
 ## 👩‍💻 Author
 
-**Beesam Gayathri**  
+**Beesam Gayathri**
+CSM A Section | Roll No: 6614
 
 ---
 
-⭐ If you found this project useful, feel free to star the repository!
+⭐ If you found this project useful, consider starring the repository!
